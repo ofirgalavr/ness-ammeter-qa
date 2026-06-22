@@ -28,10 +28,10 @@ if __name__ == "__main__":
     # Fixed: corrected ports and commands to match ammeter definitions
     # Greenlee: port 5000, command: MEASURE_GREENLEE -get_measurement
     # Entes: port 5001, command: MEASURE_ENTES -get_data
-    # Circutor: port 5002, command: MEASURE_CIRCUTOR -get_measurement
+    # # Circutor: port 5002, command: MEASURE_CIRCUTOR -get_measurement -current
 
     # Wait for the servers to start, if you have problem restarting the servers between runs try increasing sleep time.
     time.sleep(5)
     request_current_from_ammeter(5000, b'MEASURE_GREENLEE -get_measurement')  # Request from Greenlee Ammeter
     request_current_from_ammeter(5001, b'MEASURE_ENTES -get_data')  # Request from ENTES Ammeter
-    request_current_from_ammeter(5002, b'MEASURE_CIRCUTOR -get_measurement')  # Request from CIRCUTOR Ammeter
+    request_current_from_ammeter(5002, b'MEASURE_CIRCUTOR -get_measurement -current')  # Request from CIRCUTOR Ammeter
