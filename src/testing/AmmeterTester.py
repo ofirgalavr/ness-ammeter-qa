@@ -86,15 +86,21 @@ class AmmeterTester:
 
         for i in range(num_measurements):
             port, command = AMMETER_CONFIG[ammeter_type]
-            result = client.request_current_from_ammeter(port, command)
-
-            if result is None:
-                logger.error(f"No response from {ammeter_type} on measurement {i + 1}")
-            else:
-                measurements.append(result)
-                logger.info(f"Measurement {i + 1}: {result[0]} A at {result[1]}")
+            try:
+                result = client.request_current_from_ammeter(port, command)
+                if result is None:
+                    logger.error(f"No response from {ammeter_type} on measurement {i + 1}")
+                else:
+                    measurements.append(result)
+                    logger.info(f"Measurement {i + 1}: {result[0]} A at {result[1]}")
+            except ConnectionRefusedError:
+                logger.error(f"Cannot connect to {ammeter_type} on port {port}")
+                raise
+            except Exception as e:
+                logger.error(f"Unexpected error on measurement {i + 1}: {e}")
+                raise
 
             time.sleep(interval)
-
+            
         logger.info(f"Sampling complete: {len(measurements)} measurements collected")
         return measurements
