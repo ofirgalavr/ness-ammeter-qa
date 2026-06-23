@@ -1,24 +1,32 @@
 testing:
   sampling:
-    measurements_count: NULL
-    total_duration_seconds: NULL
-    sampling_frequency_hz: NULL
+    measurements_count: 4
+    total_duration_seconds: 10
+    sampling_frequency_hz: 0.5
 
 ammeters:
-#  greenlee:
-#    port: 5000
-#    command: "MEASURE_GREENLEE -get_measurement"
-#  entes:
-#    port: 5001
-#    command: "MEASURE_ENTES -get_data"
-#  circutor:
-#    port: 5002
-#    command: "MEASURE_CIRCUTOR -get_measurement"
+  greenlee:
+    port: 5000
+    command: "MEASURE_GREENLEE -get_measurement"
+  entes:
+    port: 5001
+    command: "MEASURE_ENTES -get_data"
+  circutor:
+    port: 5002
+    command: "MEASURE_CIRCUTOR -get_measurement -current"
 
 analysis:
   statistical_metrics:
+    - mean
+    - median
+    - std
+    - min
+    - max
   visualization:
     enabled: true
     plot_types:
+      - time_series
+      - histogram
 
 result_management:
+  output_dir: "results"
