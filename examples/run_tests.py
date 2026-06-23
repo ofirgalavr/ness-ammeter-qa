@@ -29,8 +29,14 @@ if __name__ == "__main__":
     # Start emulators
     start_emulators()
 
-    # Use AmmeterTester, unified interface
+    # Use AmmeterTester — sample from each ammeter
+    # Parameters: ammeter_type, num_measurements, duration (seconds), frequency (measurements per second)
     tester = AmmeterTester()
-    tester.measure("greenlee")
-    tester.measure("entes")
-    tester.measure("circutor")
+    print("\n--- Sampling Greenlee ---")
+    print(tester.sample("greenlee", num_measurements=4, duration=10, frequency=0.5))
+
+    print("\n--- Sampling Entes ---")
+    print(tester.sample("entes", num_measurements=4, duration=10, frequency=0.5))
+
+    print("\n--- Sampling Circutor ---")
+    print(tester.sample("circutor", num_measurements=4, duration=10, frequency=0.5))
