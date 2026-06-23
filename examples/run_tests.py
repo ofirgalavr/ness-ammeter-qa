@@ -1,20 +1,36 @@
-from src.testing.test_framework import AmmeterTestFramework
+# run_tests.py
+# Simple runner to test all ammeters using the unified AmmeterTester interface.
 
-def main():
-    # יצירת מסגרת הבדיקות
-    framework = AmmeterTestFramework()
-    
-    # הרצת בדיקות לכל סוגי האמפרמטרים
-    ammeter_types = ["greenlee", "entes", "circutor"]
-    results = {}
-    
-    for ammeter_type in ammeter_types:
-        print(f"Testing {ammeter_type} ammeter...")
-        results[ammeter_type] = framework.run_test()
-        
-    # השוואת תוצאות
-    for ammeter_type, result in results.items():
-        print(f"\nResults for {ammeter_type}:")
+import threading
+import time
+
+from Ammeters.Circutor_Ammeter import CircutorAmmeter
+from Ammeters.Entes_Ammeter import EntesAmmeter
+from Ammeters.Greenlee_Ammeter import GreenleeAmmeter
+from src.testing.AmmeterTester import AmmeterTester
+
+def run_greenlee():
+    GreenleeAmmeter(5000).start_server()
+
+def run_entes():
+    EntesAmmeter(5001).start_server()
+
+def run_circutor():
+    CircutorAmmeter(5002).start_server()
+ 
+def start_emulators():
+    # Start each ammeter server in a separate background thread
+    threading.Thread(target=run_greenlee, daemon=True).start()
+    threading.Thread(target=run_entes, daemon=True).start()
+    threading.Thread(target=run_circutor, daemon=True).start()
+    time.sleep(5)  # Wait for servers to start
 
 if __name__ == "__main__":
-    main() 
+    # Start emulators
+    start_emulators()
+
+    # Use AmmeterTester, unified interface
+    tester = AmmeterTester()
+    tester.measure("greenlee")
+    tester.measure("entes")
+    tester.measure("circutor")
