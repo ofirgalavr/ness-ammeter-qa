@@ -21,7 +21,17 @@ class TestLogger:
 
         # הגדרת הלוגר
         logger = logging.getLogger(f"test_{self._test_name}")
+        logger.setLevel(logging.INFO)          # אחרת info/debug נבלעים
+        logger.propagate = False               # שלא יודפס פעמיים ל-stderr
 
+        # מניעת handlers כפולים — getLogger מחזיר את אותו אובייקט בכל קריאה
+        if not logger.handlers:
+            file_handler = logging.FileHandler(log_file, encoding="utf-8")
+            formatter = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
+            file_handler.setFormatter(formatter)
+            logger.addHandler(file_handler)
 
         return logger
 
