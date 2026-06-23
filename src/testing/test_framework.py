@@ -1,6 +1,5 @@
-
-
-from ..utils.config import load_config
+from typing import Dict
+from src.utils.config import load_config
 
 
 class AmmeterTestFramework:
