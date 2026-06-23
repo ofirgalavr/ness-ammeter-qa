@@ -5,6 +5,7 @@
 from Ammeters import client
 import time
 from src.utils.logger import TestLogger
+import numpy as np
 
 
 # Configuration: maps ammeter name -> (port, command)
@@ -101,6 +102,37 @@ class AmmeterTester:
                 raise
 
             time.sleep(interval)
-            
+
         logger.info(f"Sampling complete: {len(measurements)} measurements collected")
         return measurements
+    
+
+    import numpy as np
+
+    def calculate_statistics(self, measurements: list) -> dict:
+        """
+        Calculate descriptive statistics from a list of measurements.
+        measurements: list of (value, timestamp) tuples — output of sample()
+        Returns a dict with mean, median, std, min, max, count.
+        """
+        logger = TestLogger("calculate_statistics")
+
+        if not measurements:
+            logger.error("measurements list is empty")
+            raise ValueError("measurements list is empty")
+
+        # Extract only the numeric values (index 0 in each tuple)
+        values = [m[0] for m in measurements]
+        arr = np.array(values)
+
+        stats = {
+            "count":  int(len(arr)),
+            "mean":   round(float(np.mean(arr)), 4),
+            "median": round(float(np.median(arr)), 4),
+            "std":    round(float(np.std(arr, ddof=1)), 4) if len(arr) > 1 else 0.0,
+            "min":    round(float(np.min(arr)), 4),
+            "max":    round(float(np.max(arr)), 4),
+        }
+
+        logger.info(f"Statistics calculated: {stats}")
+        return stats

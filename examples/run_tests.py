@@ -32,11 +32,18 @@ if __name__ == "__main__":
     # Use AmmeterTester — sample from each ammeter
     # Parameters: ammeter_type, num_measurements, duration (seconds), frequency (measurements per second)
     tester = AmmeterTester()
+    
     print("\n--- Sampling Greenlee ---")
-    print(tester.sample("greenlee", num_measurements=4, duration=10, frequency=0.5))
+    greenlee_measurements = tester.sample("greenlee", num_measurements=4, duration=10, frequency=0.5)
+    print(greenlee_measurements)
+    print("Stats:", tester.calculate_statistics(greenlee_measurements))
 
     print("\n--- Sampling Entes ---")
-    print(tester.sample("entes", num_measurements=4, duration=10, frequency=0.5))
+    entes_measurements = tester.sample("entes", num_measurements=4, duration=10, frequency=0.5)
+    print(entes_measurements)
+    print("Stats:", tester.calculate_statistics(entes_measurements))
 
     print("\n--- Sampling Circutor ---")
-    print(tester.sample("circutor", num_measurements=4, duration=10, frequency=0.5))
+    circutor_measurements = tester.sample("circutor", num_measurements=4, duration=10, frequency=0.5)
+    print(circutor_measurements)
+    print("Stats:", tester.calculate_statistics(circutor_measurements))
