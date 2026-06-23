@@ -6,6 +6,11 @@ from Ammeters import client
 import time
 from src.utils.logger import TestLogger
 import numpy as np
+import uuid
+import json
+import os
+from datetime import datetime
+
 
 
 # Configuration: maps ammeter name -> (port, command)
@@ -107,7 +112,6 @@ class AmmeterTester:
         return measurements
     
 
-    import numpy as np
 
     def calculate_statistics(self, measurements: list) -> dict:
         """
@@ -136,3 +140,54 @@ class AmmeterTester:
 
         logger.info(f"Statistics calculated: {stats}")
         return stats
+    
+
+    def save_results(self, results: dict) -> str:
+        """
+        Save all ammeter test results to a single JSON file with metadata.
+        results: dict with ammeter_type as key, and dict with measurements + statistics as value.
+        Example: {
+            "greenlee": {"measurements": [...], "statistics": {...}},
+            "entes":    {"measurements": [...], "statistics": {...}},
+            "circutor": {"measurements": [...], "statistics": {...}},
+        }
+        Returns the path to the saved file.
+        """
+        logger = TestLogger("save_results")
+
+        # Validate input
+        if not results:
+            logger.error("results dict is empty")
+            raise ValueError("results dict is empty")
+
+        # Build result record with metadata
+        run_id = str(uuid.uuid4())
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Convert measurements from tuples to dicts for JSON serialization
+        serializable_results = {}
+        for ammeter_type, data in results.items():
+            serializable_results[ammeter_type] = {
+                "measurements": [{"value": m[0], "timestamp": m[1]} for m in data["measurements"]],
+                "statistics":   data["statistics"],
+            }
+
+        record = {
+            "run_id":    run_id,
+            "timestamp": timestamp,
+            "results":   serializable_results,
+        }
+
+        # Save to results directory
+        os.makedirs("results", exist_ok=True)
+        filename = f"results/run_{timestamp}_{run_id[:8]}.json"
+
+        try:
+            with open(filename, "w") as f:
+                json.dump(record, f, indent=2)
+            logger.info(f"Results saved to {filename}")
+        except Exception as e:
+            logger.error(f"Failed to save results: {e}")
+            raise
+
+        return filename

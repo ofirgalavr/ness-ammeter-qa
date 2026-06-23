@@ -29,21 +29,33 @@ if __name__ == "__main__":
     # Start emulators
     start_emulators()
 
-    # Use AmmeterTester — sample from each ammeter
+    # Use AmmeterTester — sample, calculate statistics, and save results for each ammeter
     # Parameters: ammeter_type, num_measurements, duration (seconds), frequency (measurements per second)
     tester = AmmeterTester()
-    
+
     print("\n--- Sampling Greenlee ---")
     greenlee_measurements = tester.sample("greenlee", num_measurements=4, duration=10, frequency=0.5)
+    greenlee_stats = tester.calculate_statistics(greenlee_measurements)
     print(greenlee_measurements)
-    print("Stats:", tester.calculate_statistics(greenlee_measurements))
+    print("Stats:", greenlee_stats)
 
     print("\n--- Sampling Entes ---")
     entes_measurements = tester.sample("entes", num_measurements=4, duration=10, frequency=0.5)
+    entes_stats = tester.calculate_statistics(entes_measurements)
     print(entes_measurements)
-    print("Stats:", tester.calculate_statistics(entes_measurements))
+    print("Stats:", entes_stats)
 
     print("\n--- Sampling Circutor ---")
     circutor_measurements = tester.sample("circutor", num_measurements=4, duration=10, frequency=0.5)
+    circutor_stats = tester.calculate_statistics(circutor_measurements)
     print(circutor_measurements)
-    print("Stats:", tester.calculate_statistics(circutor_measurements))
+    print("Stats:", circutor_stats)
+
+    # Save all results to a single file
+    saved_path = tester.save_results({
+        "greenlee": {"measurements": greenlee_measurements, "statistics": greenlee_stats},
+        "entes":    {"measurements": entes_measurements,   "statistics": entes_stats},
+        "circutor": {"measurements": circutor_measurements,"statistics": circutor_stats},
+    })
+    print("\nSaved to:", saved_path)
+
