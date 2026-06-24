@@ -12,7 +12,7 @@ def framework():
     """Create a fresh AmmeterTestFramework instance for each test."""
     return AmmeterTestFramework()
 
-
+@pytest.mark.unit
 class TestRunTest:
 
     def test_unknown_ammeter_raises(self, framework):

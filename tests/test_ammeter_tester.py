@@ -11,6 +11,7 @@ from src.testing.AmmeterTester import AmmeterTester
 
 # ── calculate_statistics ────────────────────────────────────────────
 
+@pytest.mark.unit
 class TestCalculateStatistics:
 
     def test_empty_list_raises(self, tester):
@@ -40,6 +41,7 @@ class TestCalculateStatistics:
 
 # ── sample ──────────────────────────────────────────────────────────
 
+@pytest.mark.unit
 class TestSample:
 
     def test_unknown_ammeter_raises(self, tester):
@@ -84,6 +86,7 @@ class TestSample:
 
 # ── save_results ────────────────────────────────────────────────────
 
+@pytest.mark.unit
 class TestSaveResults:
 
     def test_empty_results_raises(self, tester):
@@ -123,6 +126,7 @@ class TestSaveResults:
 
 # ── sample — edge cases & errors ────────────────────────────────────
 
+@pytest.mark.unit
 class TestSampleEdgeCases:
 
     @patch("src.testing.AmmeterTester.client.request_current_from_ammeter")
@@ -148,6 +152,7 @@ class TestSampleEdgeCases:
 
 # ── calculate_statistics — edge cases ───────────────────────────────
 
+@pytest.mark.unit
 class TestCalculateStatisticsEdgeCases:
 
     def test_result_has_all_required_keys(self, tester, sample_measurements):

@@ -1,9 +1,78 @@
 # tests/conftest.py
 # Shared pytest fixtures available to all test files in this directory.
+# Emulators are started once per session to avoid port conflicts.
+
+import socket
+import threading
+import time
 
 import pytest
-from src.testing.AmmeterTester import AmmeterTester
 
+from Ammeters.Circutor_Ammeter import CircutorAmmeter
+from Ammeters.Entes_Ammeter import EntesAmmeter
+from Ammeters.Greenlee_Ammeter import GreenleeAmmeter
+from src.testing.AmmeterTester import AmmeterTester
+from src.testing.test_framework import AmmeterTestFramework
+
+# ── constants ────────────────────────────────────────────────────────
+
+EMULATOR_PORTS = {
+    "greenlee": 5000,
+    "entes":    5001,
+    "circutor": 5002,
+}
+
+STARTUP_TIMEOUT_SECONDS = 10
+STARTUP_POLL_INTERVAL   = 0.2
+
+
+# ── helpers ──────────────────────────────────────────────────────────
+
+def wait_for_port(host: str, port: int, timeout: float) -> bool:
+    """Poll a TCP port until it accepts connections or timeout expires."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            with socket.create_connection((host, port), timeout=1):
+                return True
+        except (ConnectionRefusedError, OSError):
+            time.sleep(STARTUP_POLL_INTERVAL)
+    return False
+
+
+def start_emulators():
+    """Start all three ammeter emulators in background daemon threads."""
+    threading.Thread(target=lambda: GreenleeAmmeter(5000).start_server(), daemon=True).start()
+    threading.Thread(target=lambda: EntesAmmeter(5001).start_server(),    daemon=True).start()
+    threading.Thread(target=lambda: CircutorAmmeter(5002).start_server(), daemon=True).start()
+
+
+# ── session fixture — emulators ───────────────────────────────────────
+
+@pytest.fixture(scope="session")
+def live_framework():
+    """
+    Session-scoped fixture: starts emulators ONCE for the entire test session.
+    Shared across test_smoke.py, test_functional.py, and test_e2e.py.
+    Teardown is automatic — emulators are daemon threads.
+    """
+    # BEFORE — start emulators and wait for them to be ready
+    start_emulators()
+
+    for name, port in EMULATOR_PORTS.items():
+        ready = wait_for_port("127.0.0.1", port, STARTUP_TIMEOUT_SECONDS)
+        if not ready:
+            pytest.fail(
+                f"Emulator '{name}' did not start on port {port} "
+                f"within {STARTUP_TIMEOUT_SECONDS}s — possible port conflict or crash."
+            )
+
+    yield AmmeterTestFramework()
+
+    # AFTER — daemon threads shut down automatically with the session
+
+
+# ── unit test fixtures ───────────────────────────────────────────────
 
 @pytest.fixture
 def tester():
