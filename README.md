@@ -1,54 +1,221 @@
-# Ammeter Emulators
+# NES Ammeter QA — Testing Framework
 
-This project provides emulators for different types of ammeters: Greenlee, ENTES, and CIRCUTOR. Each ammeter emulator runs on a separate thread and can respond to current measurement requests.
+A Python-based testing framework for current measurement systems using multiple ammeter types (Greenlee, ENTES, CIRCUTOR). Built as part of a technical home assignment for NES.
+
+---
 
 ## Project Structure
 
-- `Ammeters/`
-  - `main.py`: Main script to start the ammeter emulators and request current measurements.
-  - `Circutor_Ammeter.py`: Emulator for the CIRCUTOR ammeter.
-  - `Entes_Ammeter.py`: Emulator for the ENTES ammeter.
-  - `Greenlee_Ammeter.py`: Emulator for the Greenlee ammeter.
-  - `base_ammeter.py`: Base class for all ammeter emulators.
-  - `client.py`: Client to request current measurements from the ammeter emulators.
-- `config/`
-  - `config.yaml`: Configuration file for the ammeter emulators.
-- `examples/`
-  - `run_test.py`: super lyze example for run test **don't use it**.
-- `src/`
-  - `testing/`
-    - `AmmeterTester.py`: Class to test the ammeter emulators.
-  - `utils/`
-    - `config.py`: Configuration settings.
-    - `logger.py`: Logging setup.
-    - `Utils.py`: Utility functions, including `generate_random_float`.
+Test\_QA\_expanded/
+
+├── main.py                        \# Starts all 3 ammeters and requests measurements
+
+├── config/
+
+│   └── config.yaml                \# Sampling, ammeter, and analysis configuration
+
+├── Ammeters/
+
+│   ├── base\_ammeter.py            \# Base TCP socket server for all ammeters
+
+│   ├── Greenlee\_Ammeter.py        \# Ohm's Law emulator (port 5000\)
+
+│   ├── Entes\_Ammeter.py           \# Hall Effect emulator (port 5001\)
+
+│   ├── Circutor\_Ammeter.py        \# Rogowski Coil emulator (port 5002\)
+
+│   └── client.py                  \# TCP client for measurement requests
+
+├── src/
+
+│   ├── testing/
+
+│   │   ├── AmmeterTester.py       \# Unified API: sample, statistics, save results
+
+│   │   └── test\_framework.py      \# Orchestrator: runs full test cycle from config
+
+│   └── utils/
+
+│       ├── config.py              \# Loads config.yaml
+
+│       ├── logger.py              \# Writes logs to results/logs/
+
+│       └── Utils.py               \# Utility functions
+
+├── examples/
+
+│   └── run\_tests.py               \# Demo: runs all 3 ammeters and saves results
+
+├── tests/
+
+│   ├── conftest.py                \# Shared fixtures \+ session-scoped emulator startup
+
+│   ├── test\_smoke.py              \# Smoke tests (2 tests)
+
+│   ├── test\_ammeter\_tester.py     \# Unit tests for AmmeterTester (19 tests)
+
+│   ├── test\_ammeter\_framework.py  \# Unit tests for AmmeterTestFramework (4 tests)
+
+│   ├── test\_functional.py         \# Functional tests (11 tests)
+
+│   └── test\_e2e.py                \# End-to-end test (1 test)
+
+├── results/                       \# Auto-generated JSON result files
+
+│   └── logs/                      \# Auto-generated log files
+
+├── pytest.ini                     \# pytest configuration and markers
+
+└── requirements.txt               \# Python dependencies
+
+---
+
+## Installation
+
+\# Navigate to the project directory
+
+cd Test\_QA\_expanded
+
+\# Create and activate virtual environment
+
+python3 \-m venv venv
+
+source venv/bin/activate  \# Mac/Linux
+
+\# Install dependencies
+
+pip install \-r requirements.txt
+
+---
 
 ## Usage
 
-# Ammeter Emulators
+### Run the demo (all 3 ammeters)
 
-## Greenlee Ammeter
+python3 \-m examples.run\_tests
 
-- **Port**: 5000
-- **Command**: `MEASURE_GREENLEE -get_measurement`
-- **Measurement Logic**: Calculates current using voltage (1V - 10V) and (0.1Ω - 100Ω).
-- **Measurement method** : Ohm's Law: I = V / R
+Starts all 3 ammeter emulators, collects measurements, calculates statistics, and saves results to `results/`.
 
-## ENTES Ammeter
+### Run a quick measurement check
 
-- **Port**: 5001
-- **Command**: `MEASURE_ENTES -get_data`
-- **Measurement Logic**: Calculates current using magnetic field strength (0.01T - 0.1T) and calibration factor (500 - 2000).
-- **Measurement method** : Hall Effect: I = B * K
+python3 main.py
 
-## CIRCUTOR Ammeter
+---
 
-- **Port**: 5002
-- **Command**: `MEASURE_CIRCUTOR -get_measurement -current`
-- **Measurement Logic**: Calculates current using voltage values (0.1V - 1.0V) over a number of samples and a random time step (0.001s - 0.01s).
-- **Measurement method** : Rogowski Coil Integration: I = ∫V dt
+## Configuration
 
-To start the ammeter emulators and request current measurements, run the `main.py` script:
-```sh
-python main.py
-```
+Edit `config/config.yaml` to control sampling behavior:
+
+testing:
+
+  sampling:
+
+    measurements\_count: 4       \# Number of measurements per run
+
+    total\_duration\_seconds: 10  \# Total test duration
+
+    sampling\_frequency\_hz: 0.5  \# Measurements per second
+
+---
+
+## Testing
+
+### Full test pipeline (recommended)
+
+Runs all tests in order — smoke → unit → functional → e2e. Emulators start once and are shared across all tests.
+
+./venv/bin/python3 \-m pytest tests/test\_smoke.py tests/test\_ammeter\_tester.py tests/test\_ammeter\_framework.py tests/test\_functional.py tests/test\_e2e.py \-v
+
+### Run by marker
+
+./venv/bin/python3 \-m pytest tests/ \-v \-m smoke        \# Sanity check only
+
+./venv/bin/python3 \-m pytest tests/ \-v \-m unit         \# Unit tests only (no emulators)
+
+./venv/bin/python3 \-m pytest tests/ \-v \-m functional   \# Functional tests
+
+./venv/bin/python3 \-m pytest tests/ \-v \-m e2e          \# End-to-end test
+
+### Test coverage summary
+
+| File | Type | Tests | Description |
+| :---- | :---- | :---- | :---- |
+| `test_smoke.py` | Smoke | 2 | System starts and responds |
+| `test_ammeter_tester.py` | Unit | 19 | Validations, happy path, edge cases, error handling |
+| `test_ammeter_framework.py` | Unit | 4 | Framework orchestration and config integration |
+| `test_functional.py` | Functional | 11 | Feature behavior, data integrity, error scenarios |
+| `test_e2e.py` | E2E | 1 | Full pipeline: measure → save → verify JSON |
+| **Total** |  | **37** |  |
+
+### Test types explained
+
+| Type | Emulators needed | Speed | Purpose |
+| :---- | :---- | :---- | :---- |
+| Smoke | Yes | Fast | Is the system alive? |
+| Unit | No (mock) | Fast | Does each function work correctly? |
+| Functional | Yes | Medium | Does each feature work as expected? |
+| E2E | Yes | Slow | Does the full pipeline work end-to-end? |
+
+---
+
+## Ammeter Reference
+
+| Ammeter | Port | Command | Measurement Method |
+| :---- | :---- | :---- | :---- |
+| Greenlee | 5000 | `MEASURE_GREENLEE -get_measurement` | Ohm's Law: I \= V / R |
+| ENTES | 5001 | `MEASURE_ENTES -get_data` | Hall Effect: I \= B × K |
+| CIRCUTOR | 5002 | `MEASURE_CIRCUTOR -get_measurement -current` | Rogowski Coil: I \= ∫V dt |
+
+---
+
+## Results
+
+Each test run generates a JSON file in `results/` with:
+
+- Unique `run_id` (UUID)  
+- Timestamp  
+- Measurements and statistics for all 3 ammeters
+
+Example filename: `run_20260624_110724_b2e392d4.json`
+
+Example structure:
+
+{
+
+  "run\_id": "b2e392d4-...",
+
+  "timestamp": "20260624\_110724",
+
+  "results": {
+
+    "greenlee": {
+
+      "measurements": \[{"value": 1.23, "timestamp": 1782288420.3}\],
+
+      "statistics": {"count": 4, "mean": 0.93, "median": 0.38, "std": 1.36, "min": 0.03, "max": 2.93}
+
+    }
+
+  }
+
+}
+
+---
+
+## Libraries Installed
+
+| Library | Purpose |
+| :---- | :---- |
+| `numpy` | Statistical calculations (mean, std, median) |
+| `scipy` | Scientific computing |
+| `matplotlib` | Visualization (bonus) |
+| `seaborn` | Visualization (bonus) |
+| `pyyaml` | Config file parsing |
+| `pandas` | Data manipulation |
+| `pytest` | Testing framework |
+
+---
+
+## Design Decisions
+
+See `CHANGES.md` for full documentation of bug fixes, design decisions, and implementation notes.  
