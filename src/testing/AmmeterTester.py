@@ -86,7 +86,6 @@ class AmmeterTester:
         # Calculate time interval between measurements
         interval = 1.0 / frequency
         measurements = []
-        start_time = time.time()
 
         logger.info(f"Starting sampling: {ammeter_type}, {num_measurements} measurements, {duration}s, {frequency}Hz")
 
