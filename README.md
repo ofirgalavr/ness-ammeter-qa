@@ -178,11 +178,11 @@ Each test run generates a JSON file in `results/` with:
 
 Example filename: `run_20260624_110724_b2e392d4.json`
 
-Example structure:
+Example output (results/run\_20260624\_110724\_b2e392d4.json):
 
 {
 
-  "run\_id": "b2e392d4-...",
+  "run\_id": "b2e392d4-1234-5678-abcd-ef0123456789",
 
   "timestamp": "20260624\_110724",
 
@@ -190,9 +190,55 @@ Example structure:
 
     "greenlee": {
 
-      "measurements": \[{"value": 1.23, "timestamp": 1782288420.3}\],
+      "measurements": \[
 
-      "statistics": {"count": 4, "mean": 0.93, "median": 0.38, "std": 1.36, "min": 0.03, "max": 2.93}
+        {"value": 0.117, "timestamp": 1782289375.8},
+
+        {"value": 0.225, "timestamp": 1782289377.8},
+
+        {"value": 0.043, "timestamp": 1782289379.8},
+
+        {"value": 0.136, "timestamp": 1782289381.8}
+
+      \],
+
+      "statistics": {"count": 4, "mean": 0.13, "median": 0.13, "std": 0.08, "min": 0.04, "max": 0.23}
+
+    },
+
+    "entes": {
+
+      "measurements": \[
+
+        {"value": 165.67, "timestamp": 1782289383.9},
+
+        {"value": 130.71, "timestamp": 1782289385.9},
+
+        {"value": 161.25, "timestamp": 1782289387.9},
+
+        {"value": 19.93,  "timestamp": 1782289389.9}
+
+      \],
+
+      "statistics": {"count": 4, "mean": 119.39, "median": 145.98, "std": 68.11, "min": 19.93, "max": 165.67}
+
+    },
+
+    "circutor": {
+
+      "measurements": \[
+
+        {"value": 0.023, "timestamp": 1782289391.9},
+
+        {"value": 0.063, "timestamp": 1782289393.9},
+
+        {"value": 0.027, "timestamp": 1782289395.9},
+
+        {"value": 0.044, "timestamp": 1782289397.9}
+
+      \],
+
+      "statistics": {"count": 4, "mean": 0.039, "median": 0.036, "std": 0.018, "min": 0.023, "max": 0.063}
 
     }
 
@@ -218,4 +264,56 @@ Example structure:
 
 ## Design Decisions
 
-See `CHANGES.md` for full documentation of bug fixes, design decisions, and implementation notes.  
+See `CHANGES.md` for full documentation of bug fixes, design decisions, and implementation notes.
+
+---
+
+## Code Examples
+
+### Using AmmeterTestFramework (recommended)
+
+from src.testing.test\_framework import AmmeterTestFramework
+
+framework \= AmmeterTestFramework()  \# loads config/config.yaml automatically
+
+\# Run a full test cycle for one ammeter
+
+result \= framework.run\_test("greenlee")
+
+print(result\["measurements"\])  \# \[(0.117, 1782289375.8), ...\]
+
+print(result\["statistics"\])    \# {"count": 4, "mean": 0.13, ...}
+
+\# Save all results to a single JSON file
+
+saved\_path \= framework.tester.save\_results({
+
+    "greenlee": framework.run\_test("greenlee"),
+
+    "entes":    framework.run\_test("entes"),
+
+    "circutor": framework.run\_test("circutor"),
+
+})
+
+print(f"Saved to: {saved\_path}")
+
+### Using AmmeterTester directly (lower-level)
+
+from src.testing.AmmeterTester import AmmeterTester
+
+tester \= AmmeterTester()
+
+\# Collect measurements manually
+
+measurements \= tester.sample("greenlee", num\_measurements=4, duration=10, frequency=0.5)
+
+\# Calculate statistics
+
+stats \= tester.calculate\_statistics(measurements)
+
+print(stats)  \# {"count": 4, "mean": 0.13, "median": 0.13, "std": 0.08, "min": 0.04, "max": 0.23}
+
+\# Save results
+
+tester.save\_results({"greenlee": {"measurements": measurements, "statistics": stats}})  
