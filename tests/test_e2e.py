@@ -166,3 +166,60 @@ class TestE2ECommunicationErrors:
         """Unknown ammeter type must raise ValueError even with live emulators."""
         with pytest.raises(ValueError):
             live_framework.run_test("unknown_device")
+
+
+# ── communication error tests ─────────────────────────────────────────
+
+@pytest.mark.e2e
+class TestE2EDataIntegrity:
+
+    def test_run_id_is_unique_between_runs(self, live_framework, tmp_path, monkeypatch):
+        """Two consecutive runs must produce different run_ids."""
+        monkeypatch.chdir(tmp_path)
+
+        results = {
+            "greenlee": live_framework.run_test("greenlee"),
+            "entes":    live_framework.run_test("entes"),
+            "circutor": live_framework.run_test("circutor"),
+        }
+
+        path1 = live_framework.tester.save_results(results)
+        path2 = live_framework.tester.save_results(results)
+
+        with open(path1) as f:
+            data1 = json.load(f)
+        with open(path2) as f:
+            data2 = json.load(f)
+
+        assert data1["run_id"] != data2["run_id"], "Two runs produced the same run_id"
+
+    def test_json_roundtrip_preserves_data(self, live_framework, tmp_path, monkeypatch):
+        """Data saved to JSON must be identical when loaded back."""
+        monkeypatch.chdir(tmp_path)
+
+        results = {
+            "greenlee": live_framework.run_test("greenlee"),
+            "entes":    live_framework.run_test("entes"),
+            "circutor": live_framework.run_test("circutor"),
+        }
+
+        path = live_framework.tester.save_results(results)
+
+        with open(path) as f:
+            data = json.load(f)
+
+        # Verify statistics are preserved exactly for all ammeters
+        for ammeter in ["greenlee", "entes", "circutor"]:
+            saved_stats = data["results"][ammeter]["statistics"]
+            original_stats = results[ammeter]["statistics"]
+            assert saved_stats == original_stats, (
+                f"{ammeter} statistics changed after JSON roundtrip"
+            )
+
+        # Verify measurement count is preserved
+        for ammeter in ["greenlee", "entes", "circutor"]:
+            saved_count = len(data["results"][ammeter]["measurements"])
+            original_count = len(results[ammeter]["measurements"])
+            assert saved_count == original_count, (
+                f"{ammeter} measurement count changed after JSON roundtrip"
+            )
