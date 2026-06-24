@@ -8,6 +8,7 @@ from Ammeters.Circutor_Ammeter import CircutorAmmeter
 from Ammeters.Entes_Ammeter import EntesAmmeter
 from Ammeters.Greenlee_Ammeter import GreenleeAmmeter
 from src.testing.test_framework import AmmeterTestFramework
+from src.utils.visualizer import plot_results
 
 def run_greenlee():
     GreenleeAmmeter(5000).start_server()
@@ -46,9 +47,14 @@ if __name__ == "__main__":
     print("Stats:", circutor["statistics"])
 
     # Save all results to a single file
-    saved_path = framework.tester.save_results({
+    results = {
         "greenlee": greenlee,
         "entes":    entes,
         "circutor": circutor,
-    })
+    }
+    saved_path = framework.tester.save_results(results)
     print("\nSaved to:", saved_path)
+
+    # Generate visualization
+    plot_results(results)
+    print("Plot saved to: results/plots/")
