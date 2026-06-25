@@ -29,7 +29,9 @@ class AmmeterTester:
 
     def measure(self, ammeter_type: str) -> None:
         """
-        Send a measurement request to the specified ammeter.
+        Send a single raw measurement request to the specified ammeter.
+        Utility method for quick manual checks and debugging only.
+        For production use, prefer sample() — it includes validation, logging, and statistics.
         ammeter_type: "greenlee" / "entes" / "circutor"
         """
         # Look up port and command from the config dictionary
