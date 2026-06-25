@@ -4,9 +4,38 @@ Documentation of all bug fixes, design decisions, and implementation notes.
 
 ---
 
-## Bug Fixes
+## Bug Fixes — Session 2 (25/06/2026)
 
-### main.py — Port Numbers
+### logger.py — Stale FileHandler Bug
+
+**Problem:** `logging.getLogger()` returns the same logger object throughout a Python process. The `if not logger.handlers:` guard prevented adding a new `FileHandler` on subsequent calls — so all runs wrote to the **first** log file created, not a new one per run.
+
+**Fix:** Replaced the guard with an explicit loop that closes and removes all existing handlers before adding a fresh `FileHandler` with the current timestamp.
+
+---
+
+### pytest.ini — Static log_file Overwrote Logs on Every Run
+
+**Problem:** `log_file = results/logs/pytest_run.log` in `pytest.ini` caused pytest to write all session logs to a fixed filename. Each new run silently overwrote the previous log file.
+
+**Fix:** Removed `log_file` and `log_file_level` from `pytest.ini`.
+
+---
+
+### conftest.py — Unified Per-Session Log File
+
+**Problem:** After removing `log_file` from `pytest.ini`, there was no unified log capturing the entire pytest session.
+
+**Fix:** Added `pytest_configure` hook in `conftest.py` that attaches a `FileHandler` directly to the root logger at session start, creating a timestamped `YYYYMMDD_HHMMSS_pytest_run.log` file. All `AmmeterLogger` messages flow into it via `propagate=True`.
+
+---
+
+### test_smoke.py — Smoke Tests Produced No Log Output
+
+**Problem:** Smoke tests called `request_current_from_ammeter()` and `AmmeterTestFramework()` directly — neither uses `AmmeterLogger` — so smoke runs produced an empty `pytest_run.log`.
+
+**Fix:** Added `import logging` and a module-level `logger = logging.getLogger(__name__)` to `test_smoke.py`. Each test now logs start and result messages.
+
 
 **Problem:** All three ammeter ports were wrong — they did not match the ammeter objects or the README.
 

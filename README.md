@@ -308,10 +308,10 @@ Example structure:
 
 Each run generates log files in `results/logs/`:
 
-- `pytest_run.log` — logs from all unit tests  
-- `run_<timestamp>_<run_id>.log` — logs from functional/E2E runs, linked to the JSON result file by run\_id
+- `YYYYMMDD_HHMMSS_pytest_run.log` — unified log for the entire pytest session (all stages, all ammeters, chronological)
+- `YYYYMMDD_HHMMSS_<name>.log` — per-function log file for each AmmeterLogger call (sample, statistics, save_results)
 
-**Note:** `ERROR` entries in `pytest_run.log` are **expected** — they come from negative tests that verify error handling. Each ERROR is preceded by an `EXPECTED ERROR TEST:` line.
+**Note:** `ERROR` entries in log files are **expected** — they come from negative tests that verify error handling.
 
 See `results/logs/README.md` for full log format documentation.
 
