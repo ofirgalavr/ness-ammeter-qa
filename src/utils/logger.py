@@ -9,27 +9,29 @@ class TestLogger:
 
     def _setup_logger(self) -> logging.Logger:
         """
-        הגדרת הלוגר עם פורמט מותאם וכתיבה לקובץ
+        Set up the logger with a custom formatter and file output.
         """
-        # יצירת תיקיית הלוגים
+        # Create the logs directory
         log_dir = "results/logs"
         os.makedirs(log_dir, exist_ok=True)
 
-        # הגדרת שם הקובץ עם תאריך ומזהה הבדיקה
+        # Build log filename with timestamp and test name
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         log_file = f"{log_dir}/{timestamp}_{self._test_name}.log"
 
-        # הגדרת הלוגר
+        # Configure the logger
         logger = logging.getLogger(f"test_{self._test_name}")
-        logger.setLevel(logging.INFO)          # אחרת info/debug נבלעים
-        logger.propagate = False               # שלא יודפס פעמיים ל-stderr
+        logger.setLevel(logging.INFO)          # Without this, INFO/DEBUG messages are swallowed
+        logger.propagate = True                # Allow pytest to capture logs via root logger
 
-        # מניעת handlers כפולים — getLogger מחזיר את אותו אובייקט בכל קריאה
+        # Prevent duplicate handlers — getLogger returns the same object on every call
         if not logger.handlers:
-            file_handler = logging.FileHandler(log_file, encoding="utf-8")
             formatter = logging.Formatter(
                 "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
             )
+
+            # Write to per-test log file
+            file_handler = logging.FileHandler(log_file, encoding="utf-8")
             file_handler.setFormatter(formatter)
             logger.addHandler(file_handler)
 
