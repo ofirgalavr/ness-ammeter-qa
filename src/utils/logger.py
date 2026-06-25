@@ -24,16 +24,19 @@ class TestLogger:
         logger.setLevel(logging.INFO)          # Without this, INFO/DEBUG messages are swallowed
         logger.propagate = True                # Allow pytest to capture logs via root logger
 
-        # Prevent duplicate handlers — getLogger returns the same object on every call
-        if not logger.handlers:
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
+        formatter = logging.Formatter(
+            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        )
 
-            # Write to per-test log file
-            file_handler = logging.FileHandler(log_file, encoding="utf-8")
-            file_handler.setFormatter(formatter)
-            logger.addHandler(file_handler)
+        # Close stale handlers so each TestLogger call writes to its own timestamped file
+        for handler in logger.handlers[:]:
+            handler.close()
+            logger.removeHandler(handler)
+
+        # Always add a fresh FileHandler for this run
+        file_handler = logging.FileHandler(log_file, encoding="utf-8")
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
 
         return logger
 

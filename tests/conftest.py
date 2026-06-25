@@ -6,12 +6,36 @@ import socket
 import threading
 import time
 import pytest
+from datetime import datetime
 
 from ammeters.circutor_ammeter import CircutorAmmeter
 from ammeters.entes_ammeter import EntesAmmeter
 from ammeters.greenlee_ammeter import GreenleeAmmeter
 from src.testing.ammeter_tester import AmmeterTester
 from src.testing.test_framework import AmmeterTestFramework
+
+# ── pytest hooks ────────────────────────────────────────────────────
+
+def pytest_configure(config: pytest.Config) -> None:
+    """
+    Attach a timestamped FileHandler to the root logger so every TestLogger
+    message (propagate=True) is captured in one unified per-session log file.
+    """
+    import logging
+    import os
+    os.makedirs("results/logs", exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_path = f"results/logs/{timestamp}_pytest_run.log"
+
+    handler = logging.FileHandler(log_path, encoding="utf-8")
+    handler.setLevel(logging.INFO)
+    handler.setFormatter(logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    ))
+    root = logging.getLogger()
+    root.addHandler(handler)
+    root.setLevel(logging.INFO)
+
 
 # ── constants ────────────────────────────────────────────────────────
 
