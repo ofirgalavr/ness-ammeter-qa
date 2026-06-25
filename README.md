@@ -1,4 +1,4 @@
-# NES Ammeter QA — Testing Framework
+# NESS Ammeter QA — Testing Framework
 
 A Python-based testing framework for current measurement systems using multiple ammeter types (Greenlee, ENTES, CIRCUTOR). Built as part of a technical home assignment for NES.
 
