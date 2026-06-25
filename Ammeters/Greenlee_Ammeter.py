@@ -1,4 +1,4 @@
-from Ammeters.base_ammeter import AmmeterEmulatorBase
+from ammeters.base_ammeter import AmmeterEmulatorBase
 from src.utils.Utils import generate_random_float
 
 

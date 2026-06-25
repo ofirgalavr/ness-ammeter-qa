@@ -4,9 +4,9 @@
 import threading
 import time
 
-from Ammeters.Circutor_Ammeter import CircutorAmmeter
-from Ammeters.Entes_Ammeter import EntesAmmeter
-from Ammeters.Greenlee_Ammeter import GreenleeAmmeter
+from ammeters.circutor_ammeter import CircutorAmmeter
+from ammeters.entes_ammeter import EntesAmmeter
+from ammeters.greenlee_ammeter import GreenleeAmmeter
 from src.testing.test_framework import AmmeterTestFramework
 from src.utils.visualizer import plot_results
 
@@ -58,3 +58,13 @@ if __name__ == "__main__":
     # Generate visualization
     plot_results(results)
     print("Plot saved to: results/plots/")
+
+    # Compare accuracy across ammeters
+    accuracy = framework.tester.compare_accuracy(results)
+
+    print("\n--- Accuracy Comparison ---")
+    for ammeter, detail in accuracy["details"].items():
+        print(f"  {ammeter:10} CV={detail['cv']:6.1f}%  ({detail['verdict']})")
+
+    print(f"\n  Most consistent:  {accuracy['ranking'][0]}")
+    print(f"  Least consistent: {accuracy['ranking'][-1]}")

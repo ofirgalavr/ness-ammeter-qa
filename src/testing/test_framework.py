@@ -4,7 +4,7 @@
 
 from typing import Dict
 from src.utils.config import load_config
-from src.testing.AmmeterTester import AmmeterTester
+from src.testing.ammeter_tester import AmmeterTester
 
 
 class AmmeterTestFramework:

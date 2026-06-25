@@ -5,7 +5,7 @@
 
 import pytest
 
-from Ammeters.client import request_current_from_ammeter
+from ammeters.client import request_current_from_ammeter
 from src.testing.test_framework import AmmeterTestFramework
 
 

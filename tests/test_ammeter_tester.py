@@ -1,12 +1,13 @@
 # tests/test_ammeter_tester.py
-# Unit tests for AmmeterTester — validations and core logic.
+# Unit tests for mmeterTester — validations and core logic.
 # Uses unittest.mock to avoid requiring live ammeter servers.
 
 import pytest
 import json
 import os
+
 from unittest.mock import patch
-from src.testing.AmmeterTester import AmmeterTester
+from src.testing.ammeter_tester import AmmeterTester
 
 
 # ── calculate_statistics ────────────────────────────────────────────
@@ -69,14 +70,14 @@ class TestSample:
         with pytest.raises(ValueError):
             tester.sample("greenlee", 100, 10, 0.5)
 
-    @patch("src.testing.AmmeterTester.client.request_current_from_ammeter")
+    @patch("src.testing.ammeter_tester.client.request_current_from_ammeter")
     def test_successful_sample_returns_correct_length(self, mock_client, tester):
         """Successful sample must return list with num_measurements items."""
         mock_client.return_value = (1.5, 1000.0)
         results = tester.sample("greenlee", 3, 10, 1.0)
         assert len(results) == 3
 
-    @patch("src.testing.AmmeterTester.client.request_current_from_ammeter")
+    @patch("src.testing.ammeter_tester.client.request_current_from_ammeter")
     def test_successful_sample_returns_tuples(self, mock_client, tester):
         """Each measurement must be a tuple of (float, float)."""
         mock_client.return_value = (2.0, 9999.0)
@@ -129,20 +130,20 @@ class TestSaveResults:
 @pytest.mark.unit
 class TestSampleEdgeCases:
 
-    @patch("src.testing.AmmeterTester.client.request_current_from_ammeter")
+    @patch("src.testing.ammeter_tester.client.request_current_from_ammeter")
     def test_client_returns_none_no_measurement_added(self, mock_client, tester):
         """If client returns None, measurement is skipped — list shorter than expected."""
         mock_client.return_value = None
         results = tester.sample("greenlee", 3, 10, 1.0)
         assert len(results) == 0
 
-    @patch("src.testing.AmmeterTester.client.request_current_from_ammeter")
+    @patch("src.testing.ammeter_tester.client.request_current_from_ammeter")
     def test_zero_num_measurements_raises(self, mock_client, tester):
         """num_measurements=0 must raise ValueError."""
         with pytest.raises(ValueError):
             tester.sample("greenlee", 0, 10, 0.5)
 
-    @patch("src.testing.AmmeterTester.client.request_current_from_ammeter")
+    @patch("src.testing.ammeter_tester.client.request_current_from_ammeter")
     def test_connection_refused_raises(self, mock_client, tester):
         """ConnectionRefusedError from client must propagate up."""
         mock_client.side_effect = ConnectionRefusedError

@@ -4,10 +4,9 @@
 # Requires live emulators to run — started once via conftest.py session fixture.
 
 import json
-
 import pytest
 
-from Ammeters.client import request_current_from_ammeter
+from ammeters.client import request_current_from_ammeter
 
 
 # ── measurement tests ─────────────────────────────────────────────────

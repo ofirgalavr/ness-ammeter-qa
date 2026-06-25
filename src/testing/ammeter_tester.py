@@ -1,8 +1,8 @@
-# AmmeterTester.py
+# ammeter_tester.py
 # Unified interface for communicating with all ammeter types.
 # Hides port/command details from the caller — just pass the ammeter name.
 
-from Ammeters import client
+from ammeters import client
 import time
 from src.utils.logger import TestLogger
 import numpy as np
@@ -140,6 +140,53 @@ class AmmeterTester:
         logger.info(f"Statistics calculated: {stats}")
         return stats
     
+
+    def compare_accuracy(self, results: dict) -> dict:
+        """
+        Compare measurement consistency across ammeter types using
+        Coefficient of Variation (CV = std / mean * 100%).
+        Lower CV = more consistent = more accurate.
+        results: dict with ammeter_type as key — output of run_test()
+        Returns ranking from most to least consistent, with CV and verdict per ammeter.
+        """
+        logger = TestLogger("compare_accuracy")
+
+        if not results:
+            logger.error("results dict is empty")
+            raise ValueError("results dict is empty")
+
+        cv_scores = {}
+        for ammeter_type, data in results.items():
+            stats = data["statistics"]
+            mean  = stats["mean"]
+            std   = stats["std"]
+
+            if mean == 0:
+                cv = float("inf")
+            else:
+                cv = round((std / mean) * 100, 2)
+
+            if cv < 10:
+                verdict = "excellent"
+            elif cv < 30:
+                verdict = "good"
+            elif cv < 60:
+                verdict = "moderate"
+            else:
+                verdict = "poor"
+
+            cv_scores[ammeter_type] = {"cv": cv, "verdict": verdict}
+            logger.info(f"{ammeter_type}: CV={cv}% ({verdict})")
+
+        # Sort by CV ascending (lowest = most consistent)
+        ranking = sorted(cv_scores.keys(), key=lambda k: cv_scores[k]["cv"])
+        logger.info(f"Accuracy ranking: {ranking}")
+
+        return {
+            "ranking": ranking,
+            "details": cv_scores,
+        }
+
 
     def save_results(self, results: dict) -> str:
         """

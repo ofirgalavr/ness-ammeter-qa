@@ -5,13 +5,12 @@
 import socket
 import threading
 import time
-
 import pytest
 
-from Ammeters.Circutor_Ammeter import CircutorAmmeter
-from Ammeters.Entes_Ammeter import EntesAmmeter
-from Ammeters.Greenlee_Ammeter import GreenleeAmmeter
-from src.testing.AmmeterTester import AmmeterTester
+from ammeters.circutor_ammeter import CircutorAmmeter
+from ammeters.entes_ammeter import EntesAmmeter
+from ammeters.greenlee_ammeter import GreenleeAmmeter
+from src.testing.ammeter_tester import AmmeterTester
 from src.testing.test_framework import AmmeterTestFramework
 
 # ── constants ────────────────────────────────────────────────────────
