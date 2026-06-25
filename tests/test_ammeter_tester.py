@@ -1,5 +1,5 @@
 # tests/test_ammeter_tester.py
-# Unit tests for mmeterTester — validations and core logic.
+# Unit tests for AmmeterTester — validations and core logic.
 # Uses unittest.mock to avoid requiring live ammeter servers.
 
 import pytest
