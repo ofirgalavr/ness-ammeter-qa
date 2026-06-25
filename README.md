@@ -8,65 +8,75 @@ A Python-based testing framework for current measurement systems using multiple 
 
 Test\_QA\_expanded/
 
-├── main.py                        \# Starts all 3 ammeters and requests measurements
+├── main.py                           \# Starts all 3 ammeters and requests measurements
 
 ├── config/
 
-│   └── config.yaml                \# Sampling, ammeter, and analysis configuration
+│   └── config.yaml                   \# Sampling, ammeter, and analysis configuration
 
-├── Ammeters/
+├── ammeters/                         \# PEP 8 compliant package (lowercase)
 
-│   ├── base\_ammeter.py            \# Base TCP socket server for all ammeters
+│   ├── base\_ammeter.py               \# Base TCP socket server for all ammeters
 
-│   ├── Greenlee\_Ammeter.py        \# Ohm's Law emulator (port 5000\)
+│   ├── greenlee\_ammeter.py           \# Ohm's Law emulator (port 5000\)
 
-│   ├── Entes\_Ammeter.py           \# Hall Effect emulator (port 5001\)
+│   ├── entes\_ammeter.py              \# Hall Effect emulator (port 5001\)
 
-│   ├── Circutor\_Ammeter.py        \# Rogowski Coil emulator (port 5002\)
+│   ├── circutor\_ammeter.py           \# Rogowski Coil emulator (port 5002\)
 
-│   └── client.py                  \# TCP client for measurement requests
+│   └── client.py                     \# TCP client for measurement requests
 
 ├── src/
 
 │   ├── testing/
 
-│   │   ├── AmmeterTester.py       \# Unified API: sample, statistics, save results
+│   │   ├── ammeter\_tester.py         \# Unified API: sample, statistics, save results, compare accuracy
 
-│   │   └── test\_framework.py      \# Orchestrator: runs full test cycle from config
+│   │   └── test\_framework.py         \# Orchestrator: runs full test cycle from config
 
 │   └── utils/
 
-│       ├── config.py              \# Loads config.yaml
+│       ├── config.py                 \# Loads config.yaml
 
-│       ├── logger.py              \# Writes logs to results/logs/
+│       ├── logger.py                 \# Writes logs to results/logs/
 
-│       └── Utils.py               \# Utility functions
+│       ├── visualizer.py             \# Generates charts from results (bonus)
+
+│       └── Utils.py                  \# Utility functions
 
 ├── examples/
 
-│   └── run\_tests.py               \# Demo: runs all 3 ammeters and saves results
+│   └── run\_tests.py                  \# Demo: runs all 3 ammeters, saves results, plots charts
 
 ├── tests/
 
-│   ├── conftest.py                \# Shared fixtures \+ session-scoped emulator startup
+│   ├── conftest.py                   \# Shared fixtures \+ session-scoped emulator startup
 
-│   ├── test\_smoke.py              \# Smoke tests (2 tests)
+│   ├── run\_pipeline.sh               \# Test pipeline script with stage control
 
-│   ├── test\_ammeter\_tester.py     \# Unit tests for AmmeterTester (19 tests)
+│   ├── test\_smoke.py                 \# Smoke tests (2 tests)
 
-│   ├── test\_ammeter\_framework.py  \# Unit tests for AmmeterTestFramework (4 tests)
+│   ├── test\_ammeter\_tester.py        \# Unit tests for AmmeterTester (19 tests)
 
-│   ├── test\_functional.py         \# Functional tests (11 tests)
+│   ├── test\_ammeter\_framework.py     \# Unit tests for AmmeterTestFramework (4 tests)
 
-│   └── test\_e2e.py                \# End-to-end test (1 test)
+│   ├── test\_functional.py            \# Functional tests (11 tests)
 
-├── results/                       \# Auto-generated JSON result files
+│   ├── test\_error\_simulation.py      \# Error simulation tests (13 tests)
 
-│   └── logs/                      \# Auto-generated log files
+│   └── test\_e2e.py                   \# End-to-end test (1 test)
 
-├── pytest.ini                     \# pytest configuration and markers
+├── results/                          \# Auto-generated JSON result files
 
-└── requirements.txt               \# Python dependencies
+│   ├── logs/                         \# Auto-generated log files
+
+│   │   └── README.md                 \# Log files guide
+
+│   └── plots/                        \# Auto-generated visualization charts
+
+├── pytest.ini                        \# pytest configuration and markers
+
+└── requirements.txt                  \# Python dependencies
 
 ---
 
@@ -94,7 +104,7 @@ pip install \-r requirements.txt
 
 python3 \-m examples.run\_tests
 
-Starts all 3 ammeter emulators, collects measurements, calculates statistics, and saves results to `results/`.
+Starts all 3 ammeter emulators, collects measurements, calculates statistics, saves results to `results/`, generates visualization charts, and prints accuracy comparison.
 
 ### Run a quick measurement check
 
@@ -120,11 +130,28 @@ testing:
 
 ## Testing
 
-### Full test pipeline (recommended)
+### Run the full pipeline (recommended)
 
-Runs all tests in order — smoke → unit → functional → e2e. Emulators start once and are shared across all tests.
+./tests/run\_pipeline.sh
 
-./venv/bin/python3 \-m pytest tests/test\_smoke.py tests/test\_ammeter\_tester.py tests/test\_ammeter\_framework.py tests/test\_functional.py tests/test\_e2e.py \-v
+Runs all stages in order: smoke → unit → functional → e2e.
+
+- **smoke** and **unit** stop the pipeline immediately on failure  
+- **functional** and **e2e** continue on failure and show a full summary
+
+### Run specific stages
+
+./tests/run\_pipeline.sh smoke                  \# Smoke only
+
+./tests/run\_pipeline.sh unit                   \# Unit only
+
+./tests/run\_pipeline.sh functional             \# Functional only
+
+./tests/run\_pipeline.sh e2e                    \# E2E only
+
+./tests/run\_pipeline.sh smoke unit             \# Smoke then unit
+
+./tests/run\_pipeline.sh functional e2e         \# Functional then e2e
 
 ### Run by marker
 
@@ -136,6 +163,8 @@ Runs all tests in order — smoke → unit → functional → e2e. Emulators sta
 
 ./venv/bin/python3 \-m pytest tests/ \-v \-m e2e          \# End-to-end test
 
+**Note:** When running by marker, pytest collects all tests and filters by marker. `deselected` in the output indicates tests skipped due to marker filtering — this is expected behavior.
+
 ### Test coverage summary
 
 | File | Type | Tests | Description |
@@ -144,8 +173,9 @@ Runs all tests in order — smoke → unit → functional → e2e. Emulators sta
 | `test_ammeter_tester.py` | Unit | 19 | Validations, happy path, edge cases, error handling |
 | `test_ammeter_framework.py` | Unit | 4 | Framework orchestration and config integration |
 | `test_functional.py` | Functional | 11 | Feature behavior, data integrity, error scenarios |
+| `test_error_simulation.py` | Functional/E2E | 13 | Connection errors, corrupt data, flaky connections, real emulator failure |
 | `test_e2e.py` | E2E | 1 | Full pipeline: measure → save → verify JSON |
-| **Total** |  | **37** |  |
+| **Total** |  | **50** |  |
 
 ### Test types explained
 
@@ -153,8 +183,80 @@ Runs all tests in order — smoke → unit → functional → e2e. Emulators sta
 | :---- | :---- | :---- | :---- |
 | Smoke | Yes | Fast | Is the system alive? |
 | Unit | No (mock) | Fast | Does each function work correctly? |
-| Functional | Yes | Medium | Does each feature work as expected? |
+| Functional | Yes/Mock | Medium | Does each feature work as expected? |
 | E2E | Yes | Slow | Does the full pipeline work end-to-end? |
+
+---
+
+## Error Simulation
+
+`test_error_simulation.py` covers comprehensive error scenarios:
+
+**Connection Errors (mock):**
+
+- Connection refused — port is closed  
+- Connection reset — connection drops mid-transfer  
+- Timeout — ammeter does not respond in time  
+- OS error — network-level failure
+
+**Data Errors (mock):**
+
+- None response — ammeter returns nothing  
+- Corrupt data — string instead of float  
+- Zero value — physically valid edge case  
+- Negative value — framework accepts, statistics reflect it  
+- Extreme spike — outlier detection
+
+**Flaky Connection (mock):**
+
+- Partial failure — some measurements succeed, some return None  
+- All measurements fail — empty result list  
+- Statistics on partial results — calculated only on successful measurements
+
+**Real E2E Failure:**
+
+- Emulator killed mid-sampling — verifies graceful handling of ConnectionRefusedError
+
+---
+
+## Accuracy Comparison
+
+`compare_accuracy()` uses Coefficient of Variation (CV) to rank ammeter consistency:
+
+CV \= (std / mean) × 100%
+
+Lower CV \= more consistent \= more accurate.
+
+| CV Range | Verdict |
+| :---- | :---- |
+| \< 10% | Excellent |
+| 10% – 30% | Good |
+| 30% – 60% | Moderate |
+| \> 60% | Poor |
+
+Example output:
+
+\--- Accuracy Comparison \---
+
+  greenlee   CV=  84.5%  (poor)
+
+  entes      CV=  34.9%  (moderate)
+
+  circutor   CV=  51.2%  (moderate)
+
+  Most consistent:  entes
+
+  Least consistent: greenlee
+
+---
+
+## Visualization
+
+`run_tests.py` automatically generates a 7-panel chart saved to `results/plots/`:
+
+- Time series per ammeter (separate subplot, own scale)  
+- Measurement distribution histogram per ammeter  
+- Mean ± Std Dev bar chart (log scale) for cross-ammeter comparison
 
 ---
 
@@ -178,7 +280,7 @@ Each test run generates a JSON file in `results/` with:
 
 Example filename: `run_20260624_110724_b2e392d4.json`
 
-Example output (results/run\_20260624\_110724\_b2e392d4.json):
+Example structure:
 
 {
 
@@ -190,55 +292,9 @@ Example output (results/run\_20260624\_110724\_b2e392d4.json):
 
     "greenlee": {
 
-      "measurements": \[
-
-        {"value": 0.117, "timestamp": 1782289375.8},
-
-        {"value": 0.225, "timestamp": 1782289377.8},
-
-        {"value": 0.043, "timestamp": 1782289379.8},
-
-        {"value": 0.136, "timestamp": 1782289381.8}
-
-      \],
+      "measurements": \[{"value": 0.117, "timestamp": 1782289375.8}\],
 
       "statistics": {"count": 4, "mean": 0.13, "median": 0.13, "std": 0.08, "min": 0.04, "max": 0.23}
-
-    },
-
-    "entes": {
-
-      "measurements": \[
-
-        {"value": 165.67, "timestamp": 1782289383.9},
-
-        {"value": 130.71, "timestamp": 1782289385.9},
-
-        {"value": 161.25, "timestamp": 1782289387.9},
-
-        {"value": 19.93,  "timestamp": 1782289389.9}
-
-      \],
-
-      "statistics": {"count": 4, "mean": 119.39, "median": 145.98, "std": 68.11, "min": 19.93, "max": 165.67}
-
-    },
-
-    "circutor": {
-
-      "measurements": \[
-
-        {"value": 0.023, "timestamp": 1782289391.9},
-
-        {"value": 0.063, "timestamp": 1782289393.9},
-
-        {"value": 0.027, "timestamp": 1782289395.9},
-
-        {"value": 0.044, "timestamp": 1782289397.9}
-
-      \],
-
-      "statistics": {"count": 4, "mean": 0.039, "median": 0.036, "std": 0.018, "min": 0.023, "max": 0.063}
 
     }
 
@@ -248,23 +304,30 @@ Example output (results/run\_20260624\_110724\_b2e392d4.json):
 
 ---
 
-## Libraries Installed
+## Logging
+
+Each run generates log files in `results/logs/`:
+
+- `pytest_run.log` — logs from all unit tests  
+- `run_<timestamp>_<run_id>.log` — logs from functional/E2E runs, linked to the JSON result file by run\_id
+
+**Note:** `ERROR` entries in `pytest_run.log` are **expected** — they come from negative tests that verify error handling. Each ERROR is preceded by an `EXPECTED ERROR TEST:` line.
+
+See `results/logs/README.md` for full log format documentation.
+
+---
+
+## Libraries Used
 
 | Library | Purpose |
 | :---- | :---- |
 | `numpy` | Statistical calculations (mean, std, median) |
 | `scipy` | Scientific computing |
-| `matplotlib` | Visualization (bonus) |
+| `matplotlib` | Visualization charts |
 | `seaborn` | Visualization (bonus) |
 | `pyyaml` | Config file parsing |
 | `pandas` | Data manipulation |
 | `pytest` | Testing framework |
-
----
-
-## Design Decisions
-
-See `CHANGES.md` for full documentation of bug fixes, design decisions, and implementation notes.
 
 ---
 
@@ -286,7 +349,7 @@ print(result\["statistics"\])    \# {"count": 4, "mean": 0.13, ...}
 
 \# Save all results to a single JSON file
 
-saved\_path \= framework.tester.save\_results({
+results \= {
 
     "greenlee": framework.run\_test("greenlee"),
 
@@ -294,13 +357,21 @@ saved\_path \= framework.tester.save\_results({
 
     "circutor": framework.run\_test("circutor"),
 
-})
+}
 
-print(f"Saved to: {saved\_path}")
+saved\_path \= framework.tester.save\_results(results)
+
+\# Compare accuracy across ammeters
+
+accuracy \= framework.tester.compare\_accuracy(results)
+
+print(accuracy\["ranking"\])   \# \["circutor", "entes", "greenlee"\]
+
+print(accuracy\["details"\])   \# {"greenlee": {"cv": 84.5, "verdict": "poor"}, ...}
 
 ### Using AmmeterTester directly (lower-level)
 
-from src.testing.AmmeterTester import AmmeterTester
+from src.testing.ammeter\_tester import AmmeterTester
 
 tester \= AmmeterTester()
 
@@ -316,4 +387,10 @@ print(stats)  \# {"count": 4, "mean": 0.13, "median": 0.13, "std": 0.08, "min": 
 
 \# Save results
 
-tester.save\_results({"greenlee": {"measurements": measurements, "statistics": stats}})  
+tester.save\_results({"greenlee": {"measurements": measurements, "statistics": stats}})
+
+---
+
+## Design Decisions
+
+See `CHANGES.md` for full documentation of bug fixes, design decisions, and implementation notes.  
