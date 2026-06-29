@@ -128,6 +128,32 @@ testing:
 
 ---
 
+## Data Flow
+
+The following shows the full data flow for a single ammeter test run:
+
+```
+config.yaml
+    ↓  (measurements_count=4, duration=10, frequency=0.5)
+AmmeterTestFramework.run_test("greenlee")
+    ↓
+AmmeterTester.sample("greenlee", 4, 10, 0.5)
+    ↓  [4 times, every 2 seconds]
+client.request_current_from_ammeter(5000, b'MEASURE_GREENLEE -get_measurement')
+    ↓
+[(0.12, 1782289375.8), (0.08, 1782289377.8), (0.15, 1782289379.8), (0.11, 1782289381.8)]
+    ↓
+AmmeterTester.calculate_statistics(measurements)
+    ↓
+{"count": 4, "mean": 0.115, "std": 0.03, "min": 0.08, "max": 0.15, ...}
+    ↓
+AmmeterTester.save_results(results)
+    ↓
+results/run_20260624_110724_b2e392d4.json
+```
+
+---
+
 ## Testing
 
 ### Run the full pipeline (recommended)
