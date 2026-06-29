@@ -1,4 +1,4 @@
-# CHANGES.md — NES Ammeter QA
+# CHANGES.md — NESS Ammeter QA
 
 Documentation of all bug fixes, design decisions, and implementation notes.
 

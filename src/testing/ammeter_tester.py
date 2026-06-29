@@ -113,7 +113,6 @@ class AmmeterTester:
         return measurements
     
 
-
     def calculate_statistics(self, measurements: list) -> dict:
         """
         Calculate descriptive statistics from a list of measurements.

@@ -51,7 +51,7 @@ done
 
 echo ""
 echo -e "${CYAN}${BOLD}=================================================${RESET}"
-echo -e "${CYAN}${BOLD}          NES Ammeter QA Pipeline               ${RESET}"
+echo -e "${CYAN}${BOLD}          NESS Ammeter QA Pipeline               ${RESET}"
 echo -e "${CYAN}${BOLD}  Stages: ${STAGES[*]}${RESET}"
 echo -e "${CYAN}${BOLD}=================================================${RESET}"
 echo ""

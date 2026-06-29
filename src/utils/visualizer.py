@@ -40,7 +40,7 @@ def plot_results(results: dict, save_path: str = None) -> str:
     n = len(ammeter_order)
 
     fig = plt.figure(figsize=(14, 18))
-    fig.suptitle("NES Ammeter QA — Measurement Results", fontsize=14, fontweight="bold", y=0.99)
+    fig.suptitle("NESS Ammeter QA — Measurement Results", fontsize=14, fontweight="bold", y=0.99)
 
     gs = gridspec.GridSpec(7, 1, figure=fig, hspace=0.7,
                            height_ratios=[1, 1, 1, 1, 1, 1, 1.3])
