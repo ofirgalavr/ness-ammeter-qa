@@ -6,6 +6,7 @@
 import json
 import os
 import pytest
+from src.utils.visualizer import plot_results
 
 
 # ── E2E test ──────────────────────────────────────────────────────────
@@ -13,12 +14,11 @@ import pytest
 @pytest.mark.e2e
 class TestE2EFullPipeline:
 
-    def test_full_pipeline_saves_valid_json(self, live_framework, tmp_path, monkeypatch):
+    def test_full_pipeline_saves_valid_json(self, live_framework):
         """
         Full E2E test: run all 3 ammeters, save results, verify JSON file.
         Covers the complete flow from measurement to persisted result.
         """
-        monkeypatch.chdir(tmp_path)
 
         results = {}
         for ammeter in ["greenlee", "entes", "circutor"]:
@@ -35,3 +35,6 @@ class TestE2EFullPipeline:
         assert "timestamp" in data
         assert "results"   in data
         assert set(data["results"].keys()) == {"greenlee", "entes", "circutor"}
+
+        plot_path = plot_results(results)
+        assert os.path.exists(plot_path), "Plot file was not created"

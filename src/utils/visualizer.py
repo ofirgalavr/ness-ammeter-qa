@@ -8,6 +8,10 @@ import numpy as np
 import os
 
 from datetime import datetime
+from src.utils.config import load_config
+
+
+_CONFIG_PATH = os.path.join(os.path.dirname(__file__), "../../config/config.yaml")
 
 
 # Color per ammeter — consistent across all charts
@@ -120,9 +124,12 @@ def plot_results(results: dict, save_path: str = None) -> str:
 
     # ── Save ──────────────────────────────────────────────────────────
     if save_path is None:
-        os.makedirs("results/plots", exist_ok=True)
+        cfg = load_config(_CONFIG_PATH)
+        output_dir = cfg["result_management"]["output_dir"]
+        plots_dir = os.path.join(output_dir, "plots")
+        os.makedirs(plots_dir, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        save_path = f"results/plots/plot_{timestamp}.png"
+        save_path = f"{plots_dir}/plot_{timestamp}.png"
 
     plt.savefig(save_path, dpi=150, bbox_inches="tight")
     plt.close()

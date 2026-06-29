@@ -15,18 +15,5 @@ ammeters:
     port: 5002
     command: "MEASURE_CIRCUTOR -get_measurement -current"
 
-analysis:
-  statistical_metrics:
-    - mean
-    - median
-    - std
-    - min
-    - max
-  visualization:
-    enabled: true
-    plot_types:
-      - time_series
-      - histogram
-
 result_management:
   output_dir: "results"
