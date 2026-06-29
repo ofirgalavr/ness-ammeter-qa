@@ -298,7 +298,7 @@ Example output:
 
 ## Results
 
-Each test run generates a JSON file in `results/` with:
+Each test run generates a JSON file in the directory defined by `result_management.output_dir` in `config.yaml` (default: `results/`) with:
 
 - Unique `run_id` (UUID)  
 - Timestamp  

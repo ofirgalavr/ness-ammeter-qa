@@ -5,6 +5,7 @@
 from ammeters import client
 import time
 from src.utils.logger import TestLogger
+from src.utils.config import load_config
 import numpy as np
 import uuid
 import json
@@ -12,13 +13,16 @@ import os
 from datetime import datetime
 
 
+def _build_ammeter_config() -> dict:
+    """Load ammeter port/command mapping from config.yaml — single source of truth."""
+    config_path = os.path.join(os.path.dirname(__file__), "../../config/config.yaml")
+    cfg = load_config(config_path)
+    return {
+        name: (data["port"], data["command"].encode())
+        for name, data in cfg["ammeters"].items()
+    }
 
-# Configuration: maps ammeter name -> (port, command)
-AMMETER_CONFIG = {
-    "greenlee": (5000, b'MEASURE_GREENLEE -get_measurement'),
-    "entes":    (5001, b'MEASURE_ENTES -get_data'),
-    "circutor": (5002, b'MEASURE_CIRCUTOR -get_measurement -current'),
-}
+AMMETER_CONFIG = _build_ammeter_config()
 
 
 class AmmeterTester:
@@ -225,9 +229,12 @@ class AmmeterTester:
             "results":   serializable_results,
         }
 
-        # Save to results directory
-        os.makedirs("results", exist_ok=True)
-        filename = f"results/run_{timestamp}_{run_id[:8]}.json"
+        # Save to results directory (output_dir from config.yaml)
+        config_path = os.path.join(os.path.dirname(__file__), "../../config/config.yaml")
+        cfg = load_config(config_path)
+        output_dir = cfg["result_management"]["output_dir"]
+        os.makedirs(output_dir, exist_ok=True)
+        filename = f"{output_dir}/run_{timestamp}_{run_id[:8]}.json"
 
         try:
             with open(filename, "w") as f:
