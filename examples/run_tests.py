@@ -4,18 +4,10 @@
 import threading
 import time
 
-from ammeters.circutor_ammeter import CircutorAmmeter
-from ammeters.entes_ammeter import EntesAmmeter
-from ammeters.greenlee_ammeter import GreenleeAmmeter
+from ammeters                   import EMULATOR_CLASSES
 from src.testing.test_framework import AmmeterTestFramework
-from src.utils.config import get_config
-from src.utils.visualizer import plot_results
-
-EMULATOR_CLASSES = {
-    "greenlee": GreenleeAmmeter,
-    "entes":    EntesAmmeter,
-    "circutor": CircutorAmmeter,
-}
+from src.utils.config           import get_config
+from src.utils.visualizer       import plot_results
 
 def start_emulators():
     # Use config singleton — no file I/O

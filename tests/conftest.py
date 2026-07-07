@@ -8,19 +8,10 @@ import time
 import pytest
 from datetime import datetime
 
-from ammeters.circutor_ammeter import CircutorAmmeter
-from ammeters.entes_ammeter import EntesAmmeter
-from ammeters.greenlee_ammeter import GreenleeAmmeter
+from ammeters                   import EMULATOR_CLASSES
 from src.testing.ammeter_tester import AmmeterTester
 from src.testing.test_framework import AmmeterTestFramework
-from src.utils.config import load_config, get_config
-
-EMULATOR_CLASSES = {
-    "greenlee": GreenleeAmmeter,
-    "entes":    EntesAmmeter,
-    "circutor": CircutorAmmeter,
-    # "fluke": FlukeAmmeter,
-}
+from src.utils.config           import load_config, get_config
 
 # ── pytest hooks ────────────────────────────────────────────────────
 

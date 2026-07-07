@@ -1,17 +1,9 @@
 import threading
 import time
 
-from ammeters.circutor_ammeter import CircutorAmmeter
-from ammeters.entes_ammeter    import EntesAmmeter
-from ammeters.greenlee_ammeter import GreenleeAmmeter
+from ammeters                  import EMULATOR_CLASSES
 from ammeters.client           import request_current_from_ammeter
 from src.utils.config          import get_config
-
-EMULATOR_CLASSES = {
-    "greenlee": GreenleeAmmeter,
-    "entes":    EntesAmmeter,
-    "circutor": CircutorAmmeter,
-}
 
 if __name__ == "__main__":
     cfg = get_config()
