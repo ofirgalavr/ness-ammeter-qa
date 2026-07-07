@@ -8,22 +8,22 @@ from ammeters.circutor_ammeter import CircutorAmmeter
 from ammeters.entes_ammeter import EntesAmmeter
 from ammeters.greenlee_ammeter import GreenleeAmmeter
 from src.testing.test_framework import AmmeterTestFramework
+from src.utils.config import get_config
 from src.utils.visualizer import plot_results
 
-def run_greenlee():
-    GreenleeAmmeter(5000).start_server()
-
-def run_entes():
-    EntesAmmeter(5001).start_server()
-
-def run_circutor():
-    CircutorAmmeter(5002).start_server()
+EMULATOR_CLASSES = {
+    "greenlee": GreenleeAmmeter,
+    "entes":    EntesAmmeter,
+    "circutor": CircutorAmmeter,
+}
 
 def start_emulators():
-    # Start each ammeter server in a separate background thread
-    threading.Thread(target=run_greenlee, daemon=True).start()
-    threading.Thread(target=run_entes, daemon=True).start()
-    threading.Thread(target=run_circutor, daemon=True).start()
+    # Use config singleton — no file I/O
+    cfg = get_config()
+    for name, data in cfg["ammeters"].items():
+        port     = data["port"]
+        emulator = EMULATOR_CLASSES[name]
+        threading.Thread(target=lambda e=emulator, p=port: e(p).start_server(), daemon=True).start()
     time.sleep(5)  # Wait for servers to start
 
 if __name__ == "__main__":

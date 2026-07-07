@@ -17,3 +17,6 @@ ammeters:
 
 result_management:
   output_dir: "results"
+
+logging:
+  level: "INFO"

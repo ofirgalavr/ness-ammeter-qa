@@ -13,6 +13,13 @@ from ammeters.entes_ammeter import EntesAmmeter
 from ammeters.greenlee_ammeter import GreenleeAmmeter
 from src.testing.ammeter_tester import AmmeterTester
 from src.testing.test_framework import AmmeterTestFramework
+from src.utils.config import load_config, get_config
+
+EMULATOR_CLASSES = {
+    "greenlee": GreenleeAmmeter,
+    "entes":    EntesAmmeter,
+    "circutor": CircutorAmmeter,
+}
 
 # ── pytest hooks ────────────────────────────────────────────────────
 
@@ -20,30 +27,49 @@ def pytest_configure(config: pytest.Config) -> None:
     """
     Attach a timestamped FileHandler to the root logger so every TestLogger
     message (propagate=True) is captured in one unified per-session log file.
+    Log level is read from config.yaml — change it there to affect all loggers.
     """
     import logging
     import os
+    from src.utils.config import load_config
+
+    cfg = get_config()
+    level = getattr(logging, cfg["logging"]["level"], logging.INFO)
+
     os.makedirs("results/logs", exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_path = f"results/logs/{timestamp}_pytest_run.log"
+    # Use pipeline log file if set by run_pipeline.sh — single file for all stages
+    log_path = os.environ.get("PYTEST_LOG_FILE") or f"results/logs/{timestamp}_pytest_run.log"
 
     handler = logging.FileHandler(log_path, encoding="utf-8")
-    handler.setLevel(logging.INFO)
+    handler.setLevel(level)
     handler.setFormatter(logging.Formatter(
         "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
     ))
     root = logging.getLogger()
     root.addHandler(handler)
-    root.setLevel(logging.INFO)
+    root.setLevel(level)
+
+
+def pytest_runtest_logreport(report: pytest.TestReport) -> None:
+    """
+    Automatically log every test result to the unified pipeline log.
+    No need to add logger.info() to each test manually.
+    """
+    import logging
+    if report.when == "call":
+        # Extract test file name as logger name (e.g. tests/test_smoke.py -> test_smoke)
+        logger_name = report.nodeid.split("::")[0].replace("/", ".").replace(".py", "").split(".")[-1]
+        logger = logging.getLogger(logger_name)
+        if report.passed:
+            logger.info(f"PASSED  {report.nodeid}")
+        elif report.failed:
+            logger.error(f"FAILED  {report.nodeid}")
+        elif report.skipped:
+            logger.warning(f"SKIPPED {report.nodeid}")
 
 
 # ── constants ────────────────────────────────────────────────────────
-
-EMULATOR_PORTS = {
-    "greenlee": 5000,
-    "entes":    5001,
-    "circutor": 5002,
-}
 
 STARTUP_TIMEOUT_SECONDS = 10
 STARTUP_POLL_INTERVAL   = 0.2
@@ -64,10 +90,15 @@ def wait_for_port(host: str, port: int, timeout: float) -> bool:
 
 
 def start_emulators():
-    """Start all three ammeter emulators in background daemon threads."""
-    threading.Thread(target=lambda: GreenleeAmmeter(5000).start_server(), daemon=True).start()
-    threading.Thread(target=lambda: EntesAmmeter(5001).start_server(),    daemon=True).start()
-    threading.Thread(target=lambda: CircutorAmmeter(5002).start_server(), daemon=True).start()
+    """Start all ammeter emulators from config — single source of truth."""
+    cfg = get_config()
+    for name, data in cfg["ammeters"].items():
+        emulator = EMULATOR_CLASSES[name]
+        port     = data["port"]
+        threading.Thread(
+            target=lambda e=emulator, p=port: e(p).start_server(),
+            daemon=True
+        ).start()
 
 
 # ── session fixture — emulators ───────────────────────────────────────
@@ -79,10 +110,18 @@ def live_framework():
     Shared across test_smoke.py, test_functional.py, and test_e2e.py.
     Teardown is automatic — emulators are daemon threads.
     """
-    # BEFORE — start emulators and wait for them to be ready
+    # BEFORE — create framework first (loads config.yaml internally — single source of truth)
+    framework = AmmeterTestFramework()
+
+    # Build port map from framework config — no hardcoded ports
+    emulator_ports = {
+        name: data["port"]
+        for name, data in framework.config["ammeters"].items()
+    }
+
     start_emulators()
 
-    for name, port in EMULATOR_PORTS.items():
+    for name, port in emulator_ports.items():
         ready = wait_for_port("127.0.0.1", port, STARTUP_TIMEOUT_SECONDS)
         if not ready:
             pytest.fail(
@@ -90,7 +129,7 @@ def live_framework():
                 f"within {STARTUP_TIMEOUT_SECONDS}s — possible port conflict or crash."
             )
 
-    yield AmmeterTestFramework()
+    yield framework
 
     # AFTER — daemon threads shut down automatically with the session
 

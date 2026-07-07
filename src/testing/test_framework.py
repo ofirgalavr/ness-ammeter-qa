@@ -3,14 +3,14 @@
 # Loads test parameters from config.yaml and delegates to AmmeterTester.
 
 from typing import Dict
-from src.utils.config import load_config
+from src.utils.config import get_config
 from src.testing.ammeter_tester import AmmeterTester
 
 
 class AmmeterTestFramework:
-    def __init__(self, config_path: str = "config/config.yaml"):
-        # Load test configuration and initialize the unified tester
-        self.config = load_config(config_path)
+    def __init__(self):
+        # Use singleton config — no file I/O
+        self.config = get_config()
         self.tester = AmmeterTester()
 
     def run_test(self, ammeter_type: str) -> Dict:

@@ -4,9 +4,12 @@
 # Requires live emulators to run — started once via conftest.py session fixture.
 
 import json
+import logging
 import pytest
 
 from ammeters.client import request_current_from_ammeter
+
+logger = logging.getLogger("functional")
 
 
 # ── measurement tests ─────────────────────────────────────────────────

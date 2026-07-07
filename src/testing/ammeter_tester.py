@@ -5,7 +5,7 @@
 from ammeters import client
 import time
 from src.utils.logger import TestLogger
-from src.utils.config import load_config
+from src.utils.config import load_config, get_config
 import numpy as np
 import uuid
 import json
@@ -14,9 +14,8 @@ from datetime import datetime
 
 
 def _build_ammeter_config() -> dict:
-    """Load ammeter port/command mapping from config.yaml — single source of truth."""
-    config_path = os.path.join(os.path.dirname(__file__), "../../config/config.yaml")
-    cfg = load_config(config_path)
+    """Load ammeter port/command mapping from config singleton — single source of truth."""
+    cfg = get_config()
     return {
         name: (data["port"], data["command"].encode())
         for name, data in cfg["ammeters"].items()
@@ -31,20 +30,22 @@ class AmmeterTester:
     Knows which port and command belongs to each ammeter.
     """
 
-    def measure(self, ammeter_type: str) -> None:
+    def measure(self, ammeter_type: str) -> tuple:
         """
         Send a single raw measurement request to the specified ammeter.
+        Returns (value, timestamp) tuple.
+        Raises ValueError if ammeter_type is unknown.
+        Does NOT catch exceptions — lets them propagate to the caller (e.g. sample()).
         Utility method for quick manual checks and debugging only.
         For production use, prefer sample() — it includes validation, logging, and statistics.
         ammeter_type: "greenlee" / "entes" / "circutor"
         """
         # Look up port and command from the config dictionary
         if ammeter_type not in AMMETER_CONFIG:
-            print(f"Unknown ammeter type: {ammeter_type}")
-            return
+            raise ValueError(f"Unknown ammeter type: '{ammeter_type}'. Valid types: {list(AMMETER_CONFIG.keys())}")
 
         port, command = AMMETER_CONFIG[ammeter_type]
-        client.request_current_from_ammeter(port, command)
+        return client.request_current_from_ammeter(port, command)
 
 
     def sample(self, ammeter_type: str, num_measurements: int, duration: float, frequency: float) -> list:
@@ -96,16 +97,15 @@ class AmmeterTester:
         logger.info(f"Starting sampling: {ammeter_type}, {num_measurements} measurements, {duration}s, {frequency}Hz")
 
         for i in range(num_measurements):
-            port, command = AMMETER_CONFIG[ammeter_type]
             try:
-                result = client.request_current_from_ammeter(port, command)
+                result = self.measure(ammeter_type)
                 if result is None:
                     logger.error(f"No response from {ammeter_type} on measurement {i + 1}")
                 else:
                     measurements.append(result)
                     logger.info(f"Measurement {i + 1}: {result[0]} A at {result[1]}")
             except ConnectionRefusedError:
-                logger.error(f"Cannot connect to {ammeter_type} on port {port}")
+                logger.error(f"Cannot connect to {ammeter_type} — ConnectionRefusedError")
                 raise
             except Exception as e:
                 logger.error(f"Unexpected error on measurement {i + 1}: {e}")
@@ -229,9 +229,8 @@ class AmmeterTester:
             "results":   serializable_results,
         }
 
-        # Save to results directory (output_dir from config.yaml)
-        config_path = os.path.join(os.path.dirname(__file__), "../../config/config.yaml")
-        cfg = load_config(config_path)
+        # Save to results directory (output_dir from config singleton)
+        cfg = get_config()
         output_dir = cfg["result_management"]["output_dir"]
         os.makedirs(output_dir, exist_ok=True)
         filename = f"{output_dir}/run_{timestamp}_{run_id[:8]}.json"

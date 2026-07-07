@@ -1,37 +1,35 @@
 import threading
 import time
 
-from Ammeters.Circutor_Ammeter import CircutorAmmeter
-from Ammeters.Entes_Ammeter import EntesAmmeter
-from Ammeters.Greenlee_Ammeter import GreenleeAmmeter
-from Ammeters.client import request_current_from_ammeter
+from ammeters.circutor_ammeter import CircutorAmmeter
+from ammeters.entes_ammeter    import EntesAmmeter
+from ammeters.greenlee_ammeter import GreenleeAmmeter
+from ammeters.client           import request_current_from_ammeter
+from src.utils.config          import get_config
 
-
-def run_greenlee_emulator():
-    greenlee = GreenleeAmmeter(5000)
-    greenlee.start_server()
-
-def run_entes_emulator():
-    entes = EntesAmmeter(5001)
-    entes.start_server()
-
-def run_circutor_emulator():
-    circutor = CircutorAmmeter(5002)
-    circutor.start_server()
+EMULATOR_CLASSES = {
+    "greenlee": GreenleeAmmeter,
+    "entes":    EntesAmmeter,
+    "circutor": CircutorAmmeter,
+}
 
 if __name__ == "__main__":
+    cfg = get_config()
+
     # Start each ammeter in a separate thread
-    threading.Thread(target=run_greenlee_emulator, daemon=True).start()
-    threading.Thread(target=run_entes_emulator, daemon=True).start()
-    threading.Thread(target=run_circutor_emulator, daemon=True).start()
+    for name, data in cfg["ammeters"].items():
+        emulator = EMULATOR_CLASSES[name]
+        port     = data["port"]
+        threading.Thread(
+            target=lambda e=emulator, p=port: e(p).start_server(),
+            daemon=True
+        ).start()
 
-    # Fixed: corrected ports and commands to match ammeter definitions
-    # Greenlee: port 5000, command: MEASURE_GREENLEE -get_measurement
-    # Entes: port 5001, command: MEASURE_ENTES -get_data
-    # # Circutor: port 5002, command: MEASURE_CIRCUTOR -get_measurement -current
-
-    # Wait for the servers to start, if you have problem restarting the servers between runs try increasing sleep time.
+    # Wait for the servers to start
     time.sleep(5)
-    request_current_from_ammeter(5000, b'MEASURE_GREENLEE -get_measurement')  # Request from Greenlee Ammeter
-    request_current_from_ammeter(5001, b'MEASURE_ENTES -get_data')  # Request from ENTES Ammeter
-    request_current_from_ammeter(5002, b'MEASURE_CIRCUTOR -get_measurement -current')  # Request from CIRCUTOR Ammeter
+
+    # Request measurements from all ammeters
+    for name, data in cfg["ammeters"].items():
+        port    = data["port"]
+        command = data["command"].encode()
+        request_current_from_ammeter(port, command)

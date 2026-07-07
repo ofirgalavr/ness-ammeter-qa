@@ -9,7 +9,7 @@ import pytest
 from ammeters.client import request_current_from_ammeter
 from src.testing.test_framework import AmmeterTestFramework
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("smoke")
 
 
 @pytest.mark.smoke
@@ -25,8 +25,11 @@ class TestSmoke:
 
     def test_greenlee_emulator_responds(self, live_framework):
         """Greenlee emulator must respond to a single measurement request."""
-        logger.info("[smoke] test_greenlee_emulator_responds — sending measurement request to port 5000")
-        result = request_current_from_ammeter(5000, b'MEASURE_GREENLEE -get_measurement')
+        ammeter_cfg = live_framework.config["ammeters"]["greenlee"]
+        port    = ammeter_cfg["port"]
+        command = ammeter_cfg["command"].encode()
+        logger.info(f"[smoke] test_greenlee_emulator_responds — sending measurement request to port {port}")
+        result = request_current_from_ammeter(port, command)
         assert result is not None
         assert isinstance(result[0], float)
         logger.info(f"[smoke] test_greenlee_emulator_responds — PASSED, got {result[0]} A")

@@ -196,7 +196,7 @@ Runs all stages in order: smoke → unit → functional → e2e.
 | File | Type | Tests | Description |
 | :---- | :---- | :---- | :---- |
 | `test_smoke.py` | Smoke | 2 | System starts and responds |
-| `test_ammeter_tester.py` | Unit | 19 | Validations, happy path, edge cases, error handling |
+| `test_ammeter_tester.py` | Unit | 23 | Validations, happy path, edge cases, error handling |
 | `test_ammeter_framework.py` | Unit | 4 | Framework orchestration and config integration |
 | `test_functional.py` | Functional | 11 | Feature behavior, data integrity, error scenarios |
 | `test_error_simulation.py` | Functional/E2E | 13 | Connection errors, corrupt data, flaky connections, real emulator failure |
@@ -332,14 +332,20 @@ Example structure:
 
 ## Logging
 
-Each run generates log files in `results/logs/`:
+Each pipeline run generates a **single unified log file** in `results/logs/`:
 
-- `YYYYMMDD_HHMMSS_pytest_run.log` — unified log for the entire pytest session (all stages, all ammeters, chronological)
-- `YYYYMMDD_HHMMSS_<name>.log` — per-function log file for each AmmeterLogger call (sample, statistics, save_results)
+- `YYYYMMDD_HHMMSS_pipeline_run.log` — one file per pipeline run, containing all stages (smoke → unit → functional → e2e), all ammeters, and all test results in chronological order
+
+Log level is controlled via `config.yaml` — change it in one place to affect all loggers:
+
+```yaml
+logging:
+  level: "INFO"  # Change to WARNING or ERROR to reduce output
+```
+
+When running pytest directly (without `run_pipeline.sh`), a `YYYYMMDD_HHMMSS_pytest_run.log` file is created instead.
 
 **Note:** `ERROR` entries in log files are **expected** — they come from negative tests that verify error handling.
-
-See `results/logs/README.md` for full log format documentation.
 
 ---
 

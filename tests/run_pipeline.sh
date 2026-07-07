@@ -22,6 +22,10 @@
 # Navigate to project root regardless of where the script is called from
 cd "$(dirname "$0")/.."
 
+# Single log file for entire pipeline run
+export PYTEST_LOG_FILE="results/logs/$(date +%Y%m%d_%H%M%S)_pipeline_run.log"
+mkdir -p results/logs
+
 BOLD="\033[1m"
 GREEN="\033[0;32m"
 RED="\033[0;31m"

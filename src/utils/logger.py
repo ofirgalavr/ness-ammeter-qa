@@ -1,6 +1,5 @@
 import logging
 import os
-from datetime import datetime
 
 class TestLogger:
     def __init__(self, test_name: str):
@@ -9,35 +8,20 @@ class TestLogger:
 
     def _setup_logger(self) -> logging.Logger:
         """
-        Set up the logger with a custom formatter and file output.
+        Set up the logger that propagates to the root logger.
+        All output goes to the unified pipeline_run.log via conftest.py.
+        No separate FileHandler per test — avoids cluttering results/logs/.
         """
-        # Create the logs directory
-        log_dir = "results/logs"
-        os.makedirs(log_dir, exist_ok=True)
-
-        # Build log filename with timestamp and test name
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_file = f"{log_dir}/{timestamp}_{self._test_name}.log"
-
-        # Configure the logger
         logger = logging.getLogger(f"test_{self._test_name}")
-        logger.setLevel(logging.INFO)          # Without this, INFO/DEBUG messages are swallowed
-        logger.propagate = True                # Allow pytest to capture logs via root logger
+        logger.setLevel(logging.INFO)
+        logger.propagate = True  # ← all messages go to root logger (pipeline_run.log)
 
-        formatter = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
-
-        # Close stale handlers so each TestLogger call writes to its own timestamped file
+        # Remove any stale handlers from previous runs
         for handler in logger.handlers[:]:
             handler.close()
             logger.removeHandler(handler)
 
-        # Always add a fresh FileHandler for this run
-        file_handler = logging.FileHandler(log_file, encoding="utf-8")
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-
+        # No FileHandler — root logger in conftest.py handles file output
         return logger
 
     def info(self, message: str):
@@ -50,4 +34,4 @@ class TestLogger:
         self.logger.debug(message)
 
     def warning(self, message: str):
-        self.logger.warning(message) 
+        self.logger.warning(message)
