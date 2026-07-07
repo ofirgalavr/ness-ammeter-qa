@@ -3,6 +3,9 @@ testing:
     measurements_count: 4
     total_duration_seconds: 10
     sampling_frequency_hz: 0.5
+  startup:
+    timeout_seconds: 10
+    poll_interval: 0.2
 
 ammeters:
   greenlee:

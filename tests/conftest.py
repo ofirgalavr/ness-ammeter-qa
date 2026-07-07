@@ -19,6 +19,7 @@ EMULATOR_CLASSES = {
     "greenlee": GreenleeAmmeter,
     "entes":    EntesAmmeter,
     "circutor": CircutorAmmeter,
+    # "fluke": FlukeAmmeter,
 }
 
 # ── pytest hooks ────────────────────────────────────────────────────
@@ -71,8 +72,9 @@ def pytest_runtest_logreport(report: pytest.TestReport) -> None:
 
 # ── constants ────────────────────────────────────────────────────────
 
-STARTUP_TIMEOUT_SECONDS = 10
-STARTUP_POLL_INTERVAL   = 0.2
+_startup = get_config()["testing"]["startup"]
+STARTUP_TIMEOUT_SECONDS = _startup["timeout_seconds"]
+STARTUP_POLL_INTERVAL   = _startup["poll_interval"]
 
 
 # ── helpers ──────────────────────────────────────────────────────────
