@@ -1,16 +1,18 @@
+# ── Testing Configuration ───────────────────────────────────────────
+
 testing:
-  sampling:
-    measurements_count: 4
-    total_duration_seconds: 10
-    sampling_frequency_hz: 0.5
-  startup:
-    timeout_seconds: 10
-    poll_interval: 0.2
+  sampling:                      # Sampling configuration for the ammeter tests
+    measurements_count: 4        # Number of measurements to collect per ammeter
+    total_duration_seconds: 10   # Total test duration in seconds
+    sampling_frequency_hz: 0.5   # Measurements per second (0.5 Hz = one every 2 seconds)
+  startup:                       # Startup: waiting for ammeter emulators to be ready 
+    timeout_seconds: 10          # Time to wait for an emulator port to be ready
+    poll_interval: 0.2           # Interval to check if the port is alive (seconds)
 
 ammeters:
   greenlee:
-    port: 5000
-    command: "MEASURE_GREENLEE -get_measurement"
+    port: 5000                              # TCP port the emulator listens on
+    command: "MEASURE_GREENLEE -get_measurement"  # Exact command string (must match get_current_command)
   entes:
     port: 5001
     command: "MEASURE_ENTES -get_data"
@@ -18,8 +20,12 @@ ammeters:
     port: 5002
     command: "MEASURE_CIRCUTOR -get_measurement -current"
 
+# ── Result Management ─────────────────────────────────────────────
+
 result_management:
-  output_dir: "results"
+  output_dir: "results"   # Directory for JSON result files and plots
+
+# ── Logging Configuration ───────────────────────────────────────────
 
 logging:
-  level: "INFO"
+  level: "INFO"   # Log level: DEBUG / INFO / WARNING / ERROR
