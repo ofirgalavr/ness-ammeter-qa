@@ -131,11 +131,11 @@ class TestSaveResults:
 class TestSampleEdgeCases:
 
     @patch("src.testing.ammeter_tester.client.request_current_from_ammeter")
-    def test_client_returns_none_no_measurement_added(self, mock_client, tester):
-        """If client returns None, measurement is skipped — list shorter than expected."""
-        mock_client.return_value = None
+    def test_client_raises_value_error_is_skipped(self, mock_client, tester):
+        """ValueError (no data) is skipped — sample returns empty list, does not raise."""
+        mock_client.side_effect = ValueError("No data received from ammeter on port 5000")
         results = tester.sample("greenlee", 3, 10, 1.0)
-        assert len(results) == 0
+        assert results == []
 
     @patch("src.testing.ammeter_tester.client.request_current_from_ammeter")
     def test_zero_num_measurements_raises(self, mock_client, tester):

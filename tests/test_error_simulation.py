@@ -51,10 +51,10 @@ class TestConnectionErrors:
 @pytest.mark.functional
 class TestDataErrors:
 
-    def test_none_response_skips_measurement(self, tester):
-        """None response must be skipped — not added to measurements list."""
+    def test_no_data_response_skips_measurement(self, tester):
+        """ValueError (no data) must be skipped — not added to measurements list."""
         with patch("src.testing.ammeter_tester.client.request_current_from_ammeter") as mock:
-            mock.return_value = None
+            mock.side_effect = ValueError("No data received from ammeter on port 5000")
             results = tester.sample("greenlee", 3, 10, 1.0)
             assert len(results) == 0
 
@@ -98,14 +98,14 @@ class TestFlakyConnection:
 
     def test_partial_failure_returns_successful_measurements(self, tester):
         """
-        Flaky connection: first 2 measurements succeed, last one returns None.
+        Flaky connection: first 2 measurements succeed, last one raises ValueError.
         Framework must return only the successful measurements.
         """
         with patch("src.testing.ammeter_tester.client.request_current_from_ammeter") as mock:
             mock.side_effect = [
                 (1.5, 1000.0),
                 (2.0, 1001.0),
-                None,
+                ValueError("No data received from ammeter on port 5000"),
             ]
             results = tester.sample("greenlee", 3, 10, 1.0)
             assert len(results) == 2
@@ -113,9 +113,9 @@ class TestFlakyConnection:
             assert results[1] == (2.0, 1001.0)
 
     def test_all_measurements_fail_returns_empty_list(self, tester):
-        """All measurements return None — result is empty list."""
+        """All measurements raise ValueError — result is empty list."""
         with patch("src.testing.ammeter_tester.client.request_current_from_ammeter") as mock:
-            mock.return_value = None
+            mock.side_effect = ValueError("No data received from ammeter on port 5000")
             results = tester.sample("greenlee", 4, 10, 1.0)
             assert results == []
 
@@ -124,9 +124,9 @@ class TestFlakyConnection:
         with patch("src.testing.ammeter_tester.client.request_current_from_ammeter") as mock:
             mock.side_effect = [
                 (10.0, 1000.0),
-                None,
+                ValueError("No data received from ammeter on port 5000"),
                 (20.0, 1002.0),
-                None,
+                ValueError("No data received from ammeter on port 5000"),
             ]
             results = tester.sample("greenlee", 4, 10, 1.0)
             assert len(results) == 2

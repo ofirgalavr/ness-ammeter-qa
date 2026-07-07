@@ -99,17 +99,17 @@ class AmmeterTester:
         for i in range(num_measurements):
             try:
                 result = self.measure(ammeter_type)
-                if result is None:
-                    logger.error(f"No response from {ammeter_type} on measurement {i + 1}")
-                else:
-                    measurements.append(result)
-                    logger.info(f"Measurement {i + 1}: {result[0]} A at {result[1]}")
+                measurements.append(result)
+                logger.info(f"Measurement {i + 1}: {result[0]} A at {result[1]}")
             except ConnectionRefusedError:
                 logger.error(f"Cannot connect to {ammeter_type} — ConnectionRefusedError")
-                raise
+                raise  # Server is dead — stop everything
+            except ValueError as e:
+                logger.warning(f"Skipping measurement {i + 1}: {e}")
+                # Single measurement failed — skip and continue
             except Exception as e:
                 logger.error(f"Unexpected error on measurement {i + 1}: {e}")
-                raise
+                raise  # Unknown error — stop everything
 
             time.sleep(interval)
 
